@@ -6,6 +6,10 @@ Bootstrap Paginator is a jQuery plugin that simplifies the rendering of Bootstra
 
 # Changes
 
+v 1.1
+
+* Add the support for bootstrap v4.
+
 v 1.0
 
 * Add the support for bootstrap v3.
