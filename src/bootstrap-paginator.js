@@ -51,16 +51,22 @@
 
             var version = (options && options.bootstrapMajorVersion) ? options.bootstrapMajorVersion : $.fn.bootstrapPaginator.defaults.bootstrapMajorVersion,
                 id = this.$element.attr("id");
-
+            
             if (version === 2 && !this.$element.is("div")) {
 
                 throw "in Bootstrap version 2 the pagination must be a div element. Or if you are using Bootstrap pagination 3. Please specify it in bootstrapMajorVersion in the option";
-            } else if (version > 2 && !this.$element.is("ul")) {
+            } else if (version === 3 && !this.$element.is("ul")) {
                 throw "in Bootstrap version 3 the pagination root item must be an ul element."
+            } else if (version > 3 && !this.$element.is("nav")) {
+                throw "in Bootstrap version 4 the pagination root item must be an nav element."
             }
 
-
-
+            if (this.$element.is("nav")) {
+                var $ul = $("<ul></ul>").attr("id", id);
+                this.$element.append($ul).removeAttr("id");
+                this.$element = $ul;
+            }
+            
             this.currentPage = 1;
 
             this.lastPage = 1;
@@ -377,6 +383,10 @@
                 itemContentClass = this.getValueFromOption(this.options.itemContentClass, type, page, this.currentPage),
                 tooltipOpts = null;
 
+            if (this.options.bootstrapMajorVersion === 4) {
+                itemContainer.addClass("page-item");
+                itemContent.addClass("page-link");
+            }
 
             switch (type) {
 
@@ -412,7 +422,11 @@
             itemContent.addClass(itemContentClass).html(text).on("click", null, {type: type, page: page}, $.proxy(this.onPageItemClicked, this));
 
             if (this.options.pageUrl) {
-                itemContent.attr("href", this.getValueFromOption(this.options.pageUrl, type, page, this.currentPage));
+                var href = this.getValueFromOption(this.options.pageUrl, type, page, this.currentPage);
+                if (href == null && this.options.bootstrapMajorVersion === 4) {
+                    href = "#";
+                }
+                itemContent.attr("href", href);
             }
 
             if (this.options.useBootstrapTooltip) {
@@ -558,6 +572,11 @@
             "mini": "pagination-mini"
         },
         "3": {
+            "large": "pagination-lg",
+            "small": "pagination-sm",
+            "mini": ""
+        },
+        "4": {
             "large": "pagination-lg",
             "small": "pagination-sm",
             "mini": ""
