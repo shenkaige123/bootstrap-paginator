@@ -53,18 +53,11 @@
                 id = this.$element.attr("id");
             
             if (version === 2 && !this.$element.is("div")) {
-
                 throw "in Bootstrap version 2 the pagination must be a div element. Or if you are using Bootstrap pagination 3. Please specify it in bootstrapMajorVersion in the option";
             } else if (version === 3 && !this.$element.is("ul")) {
                 throw "in Bootstrap version 3 the pagination root item must be an ul element."
-            } else if (version > 3 && !this.$element.is("nav")) {
-                throw "in Bootstrap version 4 the pagination root item must be an nav element."
-            }
-
-            if (this.$element.is("nav")) {
-                var $ul = $("<ul></ul>").attr("id", id);
-                this.$element.append($ul).removeAttr("id");
-                this.$element = $ul;
+            } else if (version > 3 && !this.$element.parent().is("nav")) {
+                throw "in Bootstrap version 4 the pagination root item must in an nav element."
             }
             
             this.currentPage = 1;
@@ -265,14 +258,13 @@
                 alignment = this.options.alignment || "left",
                 pages = this.getPages(),
                 listContainer = this.options.bootstrapMajorVersion === 2 ? $("<ul></ul>") : this.$element,
-                listContainerClass = this.options.bootstrapMajorVersion === 2 ? this.getValueFromOption(this.options.listContainerClass, listContainer) : null,
+                listContainerClass = this.options.bootstrapMajorVersion === 2 ? this.getValueFromOption(this.options.listContainerClass, listContainer) : this.$element.attr('class'),
                 first = null,
                 prev = null,
                 next = null,
                 last = null,
                 p = null,
                 i = 0;
-
 
             this.$element.prop("class", "");
 
@@ -309,9 +301,8 @@
 
             if (this.options.bootstrapMajorVersion === 2) {
                 this.$element.append(listContainer);
-
-                listContainer.addClass(listContainerClass);
             }
+            listContainer.addClass(listContainerClass);
 
             //update the page element reference
             this.pageRef = [];
@@ -381,9 +372,10 @@
                 title = "",
                 itemContainerClass = this.options.itemContainerClass(type, page, this.currentPage),
                 itemContentClass = this.getValueFromOption(this.options.itemContentClass, type, page, this.currentPage),
-                tooltipOpts = null;
+                tooltipOpts = null,
+                slices = this.getSlices();
 
-            if (this.options.bootstrapMajorVersion === 4) {
+            if (this.options.bootstrapMajorVersion > 3) {
                 itemContainer.addClass("page-item");
                 itemContent.addClass("page-link");
             }
@@ -394,21 +386,33 @@
                 if (!this.getValueFromOption(this.options.shouldShowPage, type, page, this.currentPage)) { return; }
                 text = this.options.itemTexts(type, page, this.currentPage);
                 title = this.options.tooltipTitles(type, page, this.currentPage);
+                if (this.options.bootstrapMajorVersion > 3 && slices.current === slices.first) {
+                    itemContainer.addClass("disabled");
+                }
                 break;
             case "last":
                 if (!this.getValueFromOption(this.options.shouldShowPage, type, page, this.currentPage)) { return; }
                 text = this.options.itemTexts(type, page, this.currentPage);
                 title = this.options.tooltipTitles(type, page, this.currentPage);
+                if (this.options.bootstrapMajorVersion > 3 && slices.current === slices.last) {
+                    itemContainer.addClass("disabled");
+                }
                 break;
             case "prev":
                 if (!this.getValueFromOption(this.options.shouldShowPage, type, page, this.currentPage)) { return; }
                 text = this.options.itemTexts(type, page, this.currentPage);
                 title = this.options.tooltipTitles(type, page, this.currentPage);
+                if (this.options.bootstrapMajorVersion > 3 && this.currentPage === 1) {
+                    itemContainer.addClass("disabled");
+                }
                 break;
             case "next":
                 if (!this.getValueFromOption(this.options.shouldShowPage, type, page, this.currentPage)) { return; }
                 text = this.options.itemTexts(type, page, this.currentPage);
                 title = this.options.tooltipTitles(type, page, this.currentPage);
+                if (this.options.bootstrapMajorVersion > 3 && this.currentPage === this.options.totalPages) {
+                    itemContainer.addClass("disabled");
+                }
                 break;
             case "page":
                 if (!this.getValueFromOption(this.options.shouldShowPage, type, page, this.currentPage)) { return; }
@@ -423,7 +427,7 @@
 
             if (this.options.pageUrl) {
                 var href = this.getValueFromOption(this.options.pageUrl, type, page, this.currentPage);
-                if (href == null && this.options.bootstrapMajorVersion === 4) {
+                if (href == null && this.options.bootstrapMajorVersion > 3) {
                     href = "#";
                 }
                 itemContent.attr("href", href);
@@ -497,6 +501,22 @@
 
             return output;
 
+        },
+
+        /**
+         * Gets an slices that represents the current status of the page.
+         *
+         * @return object output objects that has first, current and last.
+         * */
+        getSlices: function() {
+            var pages = this.getPages(),
+                output = {};
+
+            output.first = 1;
+            output.current = Math.ceil(pages.current / pages.numberOfPages, 1),
+            output.last = Math.ceil(pages.total / pages.numberOfPages, 1);
+
+            return output;
         },
 
         /**
